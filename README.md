@@ -15,6 +15,14 @@ Scripts for running the experiments found in the paper are located in `maml_exam
 
 The pointmass environment is located in `maml_examples/` whereas the MuJoCo environments are located in `rllab/envs/mujoco/`.
 
+I got this to run by:
+- Installing Anaconda
+- Adding the top level dir to `PATH`
+- Installing and activating the `rllab3` environment by running `./scripts/install_linux.sh`
+- Installing cached\_property (pip).
+- Installing tensorflow(1.4.0), theano (conda, 0.7) and lasagne (pip) for aforementioned environment
+- Adding the top level dir to `PYTHONPATH`
+
 ### Speed of Code
 One current limitation of the code is that it is particularly slow. We welcome contributions to speed it up. We expect the biggest speed improvements to come from better parallelization of sampling and meta-learning graph computation.
 
