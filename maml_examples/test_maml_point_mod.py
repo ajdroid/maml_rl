@@ -18,7 +18,7 @@ import tensorflow as tf
 stub(globals())
 
 # horizon of 100
-initial_params_file1 = 'data/local/vpg-maml-point100/trpomaml1_fbs20_mbs20_flr_0.5metalr_0.01_step11/params.pkl'
+initial_params_file1 = 'data/local/vpg-maml-point100/trpomaml1_fbs20_mbs40_flr_0.5metalr_0.01_step11/params.pkl'
 initial_params_file2 = 'data/local/vpg-maml-point100/vpgrandenv/params.pkl'
 initial_params_file3 = 'data/local/vpg-maml-point100/maml0_fbs20_mbs20_flr_1.0metalr_0.01_step11/params.pkl'
 initial_params_file4= 'data/local/vpg-maml-point100/oracleenv2/params.pkl'
@@ -44,7 +44,6 @@ for step_i, initial_params_file in zip(range(len(step_sizes)), initial_params_fi
     avg_returns = []
     for goal in goals:
         goal = list(goal)
-
 
         if initial_params_file is not None and 'oracle' in initial_params_file:
             env = normalize(PointEnvRandGoalOracle(goal=goal))
@@ -89,21 +88,26 @@ for step_i, initial_params_file in zip(range(len(step_sizes)), initial_params_fi
             exp_name='test',
             #plot=True,
         )
-        import pdb; pdb.set_trace()
+#        import pdb; pdb.set_trace()
         # get return from the experiment
-        #with open('data/local/trpopoint2d-test/test/progress.csv', 'r') as f:
-        with open('data/local/vpg-maml-point100/trpomaml1_fbs20_mbs40_flr_0.5metalr_0.01_step11/progress.csv',mode='r') as f:
+        with open('data/local/trpopoint2d-test/test/progress.csv', 'r') as f:
+            reader = csv.reader(f, delimiter=',')
             i = 0
             row = None
             returns = []
             for row in reader:
                 i+=1
                 if i ==1:
-                    assert row[-1] == 'AverageReturn'
+                    # import pdb; pdb.set_trace()
+                    for j in range(len(row)):
+                        if row[j] == 'AverageReturn':
+                            break
+                    assert row[j] == 'AverageReturn'
                 else:
-                    returns.append(float(row[-1]))
+                    returns.append(float(row[j]))
             avg_returns.append(returns)
     all_avg_returns.append(avg_returns)
+    break
 
 
 for i in range(len(initial_params_files)):
@@ -117,8 +121,9 @@ for i in range(len(initial_params_files)):
         task_avg_returns.append([ret[itr] for ret in all_avg_returns[i]])
 
     results = {'task_avg_returns': task_avg_returns}
-    with open(exp_names[i] + '.pkl', 'w') as f:
+    with open(exp_names[i] + '.pkl', 'wb') as f:
         pickle.dump(results, f)
+    break
 
 import pdb; pdb.set_trace()
 
