@@ -1,7 +1,7 @@
 from maml_examples.point_env_randgoal import PointEnvRandGoal
 from maml_examples.point_env_randgoal_oracle import PointEnvRandGoalOracle
 from rllab.baselines.linear_feature_baseline import LinearFeatureBaseline
-from rllab.envs.mujoco.walker2d_env import Walker2DEnv
+#from rllab.envs.mujoco.walker2d_env import Walker2DEnv
 from rllab.envs.normalized_env import normalize
 from rllab.misc.instrument import stub, run_experiment_lite
 from sandbox.rocky.tf.algos.vpg import VPG
@@ -18,10 +18,10 @@ import tensorflow as tf
 stub(globals())
 
 # horizon of 100
-initial_params_file1 = 'data/local/vpg-maml-point100/trpomaml1_fbs20_mbs20_flr_0.5metalr_0.01_step11/params.pkl'
+initial_params_file1 = 'data/local/vpg-maml-point100/trpomaml1_fbs20_mbs40_flr_0.5metalr_0.01_step11/params.pkl'
 initial_params_file2 = 'data/local/vpg-maml-point100/vpgrandenv/params.pkl'
-initial_params_file3 = 'data/local/vpg-maml-point100/maml0_fbs20_mbs20_flr_1.0metalr_0.01_step11/params.pkl'
-initial_params_file4 = 'data/local/vpg-maml-point100/oracleenv2/params.pkl'
+initial_params_file3 = 'data/local/vpg-maml-point100/maml0_fbs20_mbs40_flr_1.0metalr_0.01_step11/params.pkl'
+initial_params_file4 = 'data/local/trpo-maml-point100/oracleenv2/params.pkl'
 
 test_num_goals = 40
 np.random.seed(1)
@@ -33,7 +33,7 @@ goals = [goals[6]]
 
 # ICML values
 step_sizes = [0.5, 0.5, 0.5,0.0, 0.5]
-initial_params_files = [initial_params_file1, initial_params_file3, None,initial_params_file4]
+initial_params_files = [initial_params_file1, initial_params_file4, None]#,initial_params_file4]
 gen_name = 'icml_point_results_'
 names = ['maml','maml0','random','oracle']
 
@@ -45,13 +45,12 @@ for step_i, initial_params_file in zip(range(len(step_sizes)), initial_params_fi
     for goal in goals:
         goal = list(goal)
 
-
         if initial_params_file is not None and 'oracle' in initial_params_file:
             env = normalize(PointEnvRandGoalOracle(goal=goal))
-            n_itr = 1
+            n_itr = 1 # only one grad step for oracle
         else:
             env = normalize(PointEnvRandGoal(goal=goal))
-            n_itr = 5
+            n_itr = 5 # number of gradient steps
         env = TfEnv(env)
         policy = GaussianMLPPolicy(  # random policy
             name='policy',
@@ -75,7 +74,6 @@ for step_i, initial_params_file in zip(range(len(step_sizes)), initial_params_fi
             optimizer_args={'init_learning_rate': step_sizes[step_i], 'tf_optimizer_args': {'learning_rate': 0.5*step_sizes[step_i]}, 'tf_optimizer_cls': tf.train.GradientDescentOptimizer}
         )
 
-
         run_experiment_lite(
             algo.train(),
             # Number of parallel workers for sampling
@@ -89,19 +87,22 @@ for step_i, initial_params_file in zip(range(len(step_sizes)), initial_params_fi
             exp_name='test',
             #plot=True,
         )
-        import pdb; pdb.set_trace()
+        # import pdb; pdb.set_trace()
         # get return from the experiment
         with open('data/local/trpopoint2d-test/test/progress.csv', 'r') as f:
             reader = csv.reader(f, delimiter=',')
             i = 0
+            retcol=0
             row = None
             returns = []
             for row in reader:
                 i+=1
                 if i ==1:
-                    assert row[-1] == 'AverageReturn'
+                    for retcol in range(len(row)):
+                        if row[retcol] == 'AverageReturn':
+                            break
                 else:
-                    returns.append(float(row[-1]))
+                    returns.append(float(row[retcol]))
             avg_returns.append(returns)
     all_avg_returns.append(avg_returns)
 
@@ -117,8 +118,10 @@ for i in range(len(initial_params_files)):
         task_avg_returns.append([ret[itr] for ret in all_avg_returns[i]])
 
     results = {'task_avg_returns': task_avg_returns}
-    with open(exp_names[i] + '.pkl', 'w') as f:
+#    import pdb; pdb.set_trace()
+    with open(exp_names[i] + '.pkl', 'wb') as f:
+        print(i)
+        print(results)
         pickle.dump(results, f)
 
-import pdb; pdb.set_trace()
 

@@ -43,7 +43,7 @@ class MAMLGaussianMLPPolicy(StochasticPolicy, Serializable):
             std_network=None,
             std_parametrization='exp',
             grad_step_size=1.0,
-            stop_grad=False,
+            stop_grad=True,
             latent_task_var=False,
     ):
         """
